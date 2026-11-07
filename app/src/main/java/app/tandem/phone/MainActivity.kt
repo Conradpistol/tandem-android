@@ -56,7 +56,7 @@ class MainActivity : Activity() {
     private fun handle(i: Intent?) {
         val data = i?.data ?: return
         if (data.scheme == "tandemphone") {
-            if (store.connect(data.toString())) { Sync.schedule(this); toast("Connected to Tandem"); sendNow() }
+            if (store.connect(data.toString())) { Sync.schedule(this); toast("Connected to Tandem"); sendNow(back = true) }
             else toast("That link didn't work. Get a fresh one in Tandem › Settings.")
         }
     }
@@ -107,6 +107,8 @@ class MainActivity : Activity() {
             store.lastMsg?.takeIf { it != Sync.OK }?.let { addView(text(it, 13f, color = accent)) }
             addView(text("Every hour, today's and yesterday's totals.", 13f, color = mute))
             addView(button("Send now", primary = false) { sendNow() })
+            addView(text(if (store.backDays > 0) "Past days filled in: ${store.backDays - 1} (Android keeps about a week or two of detail)." else "Past days: Android keeps about a week or two of detail.", 13f, color = mute).also { it.setPadding(0, dp(10), 0, 0) })
+            addView(button("Fill in past days", primary = false) { sendNow(back = true) })
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                 addView(text("Some phones stop background apps to save battery. If sending goes quiet, let this one run.", 13f, color = mute).also { it.setPadding(0, dp(10), 0, 0) })
@@ -123,16 +125,16 @@ class MainActivity : Activity() {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val t = cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
         if (t.isBlank()) { toast("Copy the connect code in Tandem first"); return }
-        if (store.connect(t)) { Sync.schedule(this); toast("Connected to Tandem"); sendNow() }
+        if (store.connect(t)) { Sync.schedule(this); toast("Connected to Tandem"); sendNow(back = true) }
         else toast("That isn't a Tandem connect code")
     }
 
-    private fun sendNow() {
+    private fun sendNow(back: Boolean = false) {
         if (!Usage.granted(this)) { render(); toast("Allow usage access first"); return }
         toast("Sending…")
         thread {
-            val r = runCatching { Sync.run(this) }.getOrElse { "Couldn't reach Tandem" }
-            runOnUiThread { toast(if (r == Sync.OK) "Sent ✓" else r); render() }
+            val r = runCatching { Sync.run(this, back) }.getOrElse { "Couldn't reach Tandem" }
+            runOnUiThread { toast(if (r == Sync.OK) (if (back) "Sent ${store.backDays} days ✓" else "Sent ✓") else r); render() }
         }
     }
 

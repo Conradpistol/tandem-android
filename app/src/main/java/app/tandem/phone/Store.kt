@@ -15,6 +15,7 @@ class Store(ctx: Context) {
     var name: String? get() = p.getString("n", null); set(v) = p.edit().putString("n", v).apply()
     var lastSent: Long get() = p.getLong("t", 0L); set(v) = p.edit().putLong("t", v).apply()
     var lastMinutes: Int get() = p.getInt("m", -1); set(v) = p.edit().putInt("m", v).apply()
+    var backDays: Int get() = p.getInt("bd", 0); set(v) = p.edit().putInt("bd", v).apply()
     var lastMsg: String? get() = p.getString("msg", null); set(v) = p.edit().putString("msg", v).apply()
 
     val connected: Boolean get() = !url.isNullOrBlank() && !apiKey.isNullOrBlank() && !key.isNullOrBlank()

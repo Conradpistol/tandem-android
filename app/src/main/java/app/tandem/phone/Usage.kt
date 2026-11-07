@@ -83,6 +83,15 @@ object Usage {
         return apps.sumOf { it.ms } to apps
     }
 
+    /** The oldest usage event Android still holds (it keeps detailed events for a limited time). */
+    fun earliest(ctx: Context): Long? {
+        val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val now = System.currentTimeMillis()
+        val ev = usm.queryEvents(now - 40L * 86_400_000L, now)
+        val e = UsageEvents.Event()
+        return if (ev.hasNextEvent()) { ev.getNextEvent(e); e.timeStamp } else null
+    }
+
     fun hm(ms: Long): String {
         val m = ms / 60_000
         return if (m < 60) "$m min" else "${m / 60} h ${m % 60} min"

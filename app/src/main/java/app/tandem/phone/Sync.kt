@@ -23,14 +23,22 @@ import java.util.concurrent.TimeUnit
 object Sync {
     const val OK = "Sent"
 
-    fun run(ctx: Context): String {
+    /** [back] = also fill in every past day Android still has complete data for (up to two weeks, which is what Tandem accepts). */
+    fun run(ctx: Context, back: Boolean = false): String {
         val s = Store(ctx)
         if (!s.connected) return "Not connected"
         if (!Usage.granted(ctx)) return "Usage access is off"
         val fmt = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         val days = JSONArray()
         var todayMin = 0
-        for (ago in 0..1) {
+        var range = 0..1
+        if (back) {
+            val first = Usage.earliest(ctx)
+            var oldest = 1
+            if (first != null) while (oldest < 13 && Usage.dayStart(oldest + 1) >= first) oldest++
+            range = 0..oldest
+        }
+        for (ago in range) {
             val (ms, apps) = Usage.forDay(ctx, ago)
             val min = (ms / 60_000).toInt().coerceIn(0, 1440)
             if (ago == 0) todayMin = min
@@ -53,6 +61,7 @@ object Sync {
                 val o = runCatching { JSONObject(text) }.getOrNull()
                 o?.optString("name")?.takeIf { it.isNotBlank() }?.let { s.name = it }
                 s.lastSent = System.currentTimeMillis(); s.lastMinutes = todayMin; s.lastMsg = OK
+                if (back) s.backDays = days.length()
                 OK
             } else {
                 val m = if (text.contains("unknown key")) "Tandem doesn't know this phone any more. Get a new code in Tandem › Settings."
