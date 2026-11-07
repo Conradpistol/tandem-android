@@ -10,7 +10,7 @@ val ks = System.getenv("TP_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
 
 android {
     namespace = "app.tandem.phone"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.tandem.phone"

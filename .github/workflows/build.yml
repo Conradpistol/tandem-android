@@ -17,7 +17,7 @@ jobs:
       # ubuntu-latest ships the Android SDK (ANDROID_HOME) with licences accepted
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.10.2'
+          gradle-version: '8.13'
       # The signing key lives in repo secrets, so every build is signed the same way and updates install over the old app.
       - name: Signing key
         env:
