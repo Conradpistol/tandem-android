@@ -1,0 +1,39 @@
+name: Build Tandem Phone
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      # The signing key lives in repo secrets, so every build is signed the same way and updates install over the old app.
+      - name: Signing key
+        env:
+          KS: ${{ secrets.TP_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then echo "$KS" | base64 -d > "$RUNNER_TEMP/tp.jks"; echo "TP_KEYSTORE=$RUNNER_TEMP/tp.jks" >> "$GITHUB_ENV"; else echo "::warning::No TP_KEYSTORE_B64 secret: this build is debug-signed and won't update over earlier ones."; fi
+      - name: Build
+        env:
+          TP_STORE_PASS: ${{ secrets.TP_STORE_PASS }}
+          TP_KEY_ALIAS: tandem
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
+      - run: cp app/build/outputs/apk/release/app-release.apk tandem-phone.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Tandem Phone 1.0.${{ github.run_number }}
+          files: tandem-phone.apk
+          make_latest: true
+          body: Install tandem-phone.apk on your Android phone, then connect it from Tandem › Settings › Connected apps › Phone screen time.

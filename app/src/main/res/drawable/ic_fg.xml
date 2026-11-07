@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- an infinity loop with a small phone in the middle, inside the 72dp safe zone -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path
+        android:strokeColor="#FFFFFF" android:strokeWidth="6" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M54,54 C46,44 36,40 30,44 C22,49 22,59 30,64 C36,68 46,64 54,54 C62,44 72,40 78,44 C86,49 86,59 78,64 C72,68 62,64 54,54 Z" />
+</vector>

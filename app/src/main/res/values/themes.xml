@@ -1,0 +1,7 @@
+<resources>
+    <color name="tandem">#E21E79</color>
+    <style name="Theme.TandemPhone" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">@color/tandem</item>
+        <item name="android:windowBackground">#F4F5FB</item>
+    </style>
+</resources>
