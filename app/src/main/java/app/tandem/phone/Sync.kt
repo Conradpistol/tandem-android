@@ -10,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -44,7 +45,11 @@ object Sync {
             if (ago == 0) todayMin = min
             val a = JSONArray()
             apps.take(15).forEach { a.put(JSONObject().put("p", it.pkg).put("l", it.label).put("m", it.ms / 60_000)) }
-            days.put(JSONObject().put("date", fmt.format(Usage.dayStart(ago))).put("minutes", min).put("apps", a))
+            val d = JSONObject().put("date", fmt.format(Usage.dayStart(ago))).put("minutes", min).put("apps", a)
+            runCatching { runBlocking { Health.day(ctx, ago) } }.getOrNull()?.let { h ->
+                h.steps?.let { d.put("steps", it) }; h.sleepMin?.let { d.put("sleep_min", it) }; h.rhr?.let { d.put("rhr", it) }
+            }
+            days.put(d)
         }
         val device = (Build.MANUFACTURER.replaceFirstChar { it.uppercase() } + " " + Build.MODEL).take(60)
         val body = JSONObject().put("k", s.key).put("days", days).put("p_device", device).toString()

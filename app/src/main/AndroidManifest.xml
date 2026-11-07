@@ -6,9 +6,15 @@
     <!-- Android's "usage access": the user switches it on in system settings. It's how screen time is read. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Health Connect: read-only, each one granted by the person in Health Connect's own screen -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
 
     <!-- so app names (YouTube, Chrome…) can be shown for the apps you use -->
     <queries>
+        <package android:name="com.google.android.apps.healthdata" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -43,5 +49,44 @@
                 <data android:scheme="tandemphone" android:host="connect" />
             </intent-filter>
         </activity>
+
+        <!-- quick log: widget, share sheet ("Share → Log to Tandem") -->
+        <activity
+            android:name=".QuickLogActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:label="Log to Tandem"
+            android:taskAffinity=""
+            android:theme="@style/Theme.TandemPhone.Dialog"
+            android:windowSoftInputMode="stateVisible|adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+        <receiver android:name=".LogWidget" android:exported="true" android:label="Log to Tandem">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_log_info" />
+        </receiver>
+
+        <!-- Health Connect requires an explanation page for its permissions -->
+        <activity android:name=".PrivacyActivity" android:exported="true" android:label="Tandem Phone and your health data">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".PrivacyActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
     </application>
 </manifest>

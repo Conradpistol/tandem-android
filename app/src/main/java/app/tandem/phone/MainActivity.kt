@@ -1,6 +1,10 @@
 package app.tandem.phone
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.HealthConnectClient
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -26,7 +30,10 @@ import androidx.core.view.WindowInsetsCompat
 import kotlin.concurrent.thread
 
 /** One screen: connect to Tandem, allow usage access, see today, send now. */
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
+    private var hcGranted: Set<String> = emptySet()
+    private val hcAsk = registerForActivityResult(PermissionController.createRequestPermissionResultContract()) { refreshHealth() }
+    private fun refreshHealth() { lifecycleScope.launch { hcGranted = runCatching { Health.granted(this@MainActivity) }.getOrDefault(emptySet()); render() } }
     private lateinit var store: Store
     private lateinit var col: LinearLayout
     private val dark get() = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
@@ -51,7 +58,7 @@ class MainActivity : Activity() {
     }
 
     override fun onNewIntent(intent: Intent) { super.onNewIntent(intent); setIntent(intent); handle(intent) }
-    override fun onResume() { super.onResume(); render() }
+    override fun onResume() { super.onResume(); render(); refreshHealth() }
 
     private fun handle(i: Intent?) {
         val data = i?.data ?: return
@@ -100,7 +107,36 @@ class MainActivity : Activity() {
             }
         }
 
-        // 4 · Sending
+        // 4 · Health Connect (steps, sleep, resting heart rate)
+        section("Health Connect").apply {
+            val st = HealthConnectClient.getSdkStatus(this@MainActivity)
+            val n = Health.PERMS.count { it in hcGranted && !it.endsWith("BACKGROUND") }
+            when {
+                st == HealthConnectClient.SDK_AVAILABLE && n > 0 -> {
+                    addView(status("Steps, sleep and resting heart rate: $n of 3 allowed", true))
+                    if (n < 3 || Health.PERMS.last() !in hcGranted) addView(button("Allow the rest", primary = false) { hcAsk.launch(Health.PERMS) })
+                }
+                st == HealthConnectClient.SDK_AVAILABLE -> {
+                    addView(text("Send your daily steps, sleep and resting heart rate too (from Samsung Health, Google Fit, a watch…). Read-only.", 14f, color = mute))
+                    addView(button("Connect Health Connect") { hcAsk.launch(Health.PERMS) })
+                }
+                st == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {
+                    addView(text("Health Connect needs an update first.", 14f, color = mute))
+                    addView(button("Update Health Connect", primary = false) {
+                        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.apps.healthdata"))) }
+                    })
+                }
+                else -> addView(text("Health Connect isn't available on this phone.", 14f, color = mute))
+            }
+        }
+
+        // 5 · Quick log
+        if (store.connected) section("Quick log").apply {
+            addView(text("Add the “Log to Tandem” widget to your home screen, or share any text to Tandem, to drop a bullet in today’s journal.", 14f, color = mute))
+            addView(button("Log something now", primary = false) { startActivity(Intent(this@MainActivity, QuickLogActivity::class.java)) })
+        }
+
+        // 6 · Sending
         if (store.connected) section("Sending").apply {
             val last = store.lastSent
             addView(text(if (last > 0) "Last sent " + DateUtils.getRelativeTimeSpanString(last, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS) else "Not sent yet", 15f))
