@@ -107,17 +107,19 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 4 · Health Connect (steps, sleep, resting heart rate)
+        // 4 · Health Connect (steps, sleep, heart rate, weight, water, blood pressure, workouts)
         section("Health Connect").apply {
             val st = HealthConnectClient.getSdkStatus(this@MainActivity)
-            val n = Health.PERMS.count { it in hcGranted && !it.endsWith("BACKGROUND") }
+            val total = Health.DATA_PERMS.size
+            val n = Health.DATA_PERMS.count { it in hcGranted }
             when {
                 st == HealthConnectClient.SDK_AVAILABLE && n > 0 -> {
-                    addView(status("Steps, sleep and resting heart rate: $n of 3 allowed", true))
-                    if (n < 3 || Health.PERMS.last() !in hcGranted) addView(button("Allow the rest", primary = false) { hcAsk.launch(Health.PERMS) })
+                    addView(status("$n of $total kinds of data allowed", true))
+                    addView(text("Steps, sleep, heart rate, weight, water, blood pressure and workouts. Samsung Health: open it, then Settings › Health Connect and turn on syncing.", 13f, color = mute))
+                    if (n < total || Health.PERMS.last() !in hcGranted) addView(button("Allow the rest", primary = false) { hcAsk.launch(Health.PERMS) })
                 }
                 st == HealthConnectClient.SDK_AVAILABLE -> {
-                    addView(text("Send your daily steps, sleep and resting heart rate too (from Samsung Health, Google Fit, a watch…). Read-only.", 14f, color = mute))
+                    addView(text("Send your steps, sleep, heart rate, weight, water, blood pressure and workouts too (from Samsung Health, Google Fit, a watch…). Read-only.", 14f, color = mute))
                     addView(button("Connect Health Connect") { hcAsk.launch(Health.PERMS) })
                 }
                 st == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> {

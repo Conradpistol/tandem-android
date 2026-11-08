@@ -48,6 +48,11 @@ object Sync {
             val d = JSONObject().put("date", fmt.format(Usage.dayStart(ago))).put("minutes", min).put("apps", a)
             runCatching { runBlocking { Health.day(ctx, ago) } }.getOrNull()?.let { h ->
                 h.steps?.let { d.put("steps", it) }; h.sleepMin?.let { d.put("sleep_min", it) }; h.rhr?.let { d.put("rhr", it) }
+                h.weightKg?.let { d.put("weight_kg", Math.round(it * 100) / 100.0) }; h.waterMl?.let { d.put("water_ml", it) }; h.activeKcal?.let { d.put("active_kcal", it) }
+                if (h.bp.isNotEmpty()) d.put("bp", JSONArray().also { arr -> h.bp.forEach { b -> arr.put(JSONObject().put("at", b.at).put("s", b.s).put("d", b.d).also { o -> b.h?.let { o.put("h", it) } }) } })
+                if (h.workouts.isNotEmpty()) d.put("workouts", JSONArray().also { arr -> h.workouts.forEach { w ->
+                    arr.put(JSONObject().put("id", w.id).put("type", w.type).put("start", w.start).put("minutes", w.minutes).also { o ->
+                        w.title?.let { o.put("title", it) }; w.km?.let { o.put("km", it) }; w.kcal?.let { o.put("kcal", it) }; w.hr?.let { o.put("hr", it) }; w.source?.let { o.put("source", it) } }) } })
             }
             days.put(d)
         }

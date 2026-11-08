@@ -1,6 +1,6 @@
 # Tandem Phone
 
-A tiny Android companion for [Tandem](https://github.com/) that sends your daily screen time to Tandem's journal.
+A tiny Android companion for Tandem that sends your daily screen time, and what Health Connect holds (Samsung Health, Google Fit, watches: steps, sleep, heart rate, weight, water, blood pressure, workouts), to your Tandem.
 
 - Reads Android's own usage stats (the same data Digital Wellbeing uses) after you switch on **usage access** for it.
 - Every hour it sends today's and yesterday's totals, plus the top apps, to your Tandem with a private key from

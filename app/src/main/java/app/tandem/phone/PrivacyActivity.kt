@@ -13,7 +13,7 @@ class PrivacyActivity : Activity() {
         setContentView(ScrollView(this).apply {
             addView(TextView(this@PrivacyActivity).apply {
                 setPadding(pad, pad * 2, pad, pad); textSize = 15f
-                text = "Tandem Phone reads your daily steps, sleep and resting heart rate from Health Connect, only if you allow each one.\n\n" +
+                text = "Tandem Phone reads your steps, sleep, heart rate, weight, water, blood pressure and workouts from Health Connect, only the kinds you allow.\n\n" +
                     "Once an hour it sends daily totals to your own Tandem account, the same way it sends screen time. Nothing is shared with anyone else, sold, or used for ads. " +
                     "You can stop it any time in Health Connect › App permissions › Tandem Phone, or by disconnecting the app in Tandem."
             })
